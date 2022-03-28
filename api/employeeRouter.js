@@ -4,6 +4,7 @@ const db = new sqlite3.Database(
   process.env.TEST_DATABASE || "./database.sqlite"
 );
 
+const timesheetRouter = require("./timesheetRouter");
 const { validatePost, allColumns } = require("./validation");
 
 let baseSelect = "SELECT * FROM Employee";
@@ -56,6 +57,7 @@ employeeRouter.param("employeeId", (req, res, next, id) => {
         throw err;
       } else if (row) {
         req.employee = row;
+        req.employeeId = employeeId;
         return next();
       } else {
         res.sendStatus(404);
@@ -77,7 +79,7 @@ employeeRouter.put("/:employeeId", (req, res) => {
 
   db.serialize(() => {
     db.run(
-      `UPDATE Employee SET name = $name, position = $position, wage = $wage, is_current_employee = $is_current_employee WHERE Employee.id = ${req.params.employeeId};`,
+      `UPDATE Employee SET name = $name, position = $position, wage = $wage, is_current_employee = $is_current_employee WHERE Employee.id = ${req.employeeId};`,
       employeeFilter,
       (err) => {
         if (err) {
@@ -87,7 +89,7 @@ employeeRouter.put("/:employeeId", (req, res) => {
     );
 
     db.get(
-      `${baseSelect} WHERE Employee.id = ${req.params.employeeId};`,
+      `${baseSelect} WHERE Employee.id = ${req.employeeId};`,
       (err, employee) => {
         if (err) {
           throw err;
@@ -101,7 +103,7 @@ employeeRouter.put("/:employeeId", (req, res) => {
 employeeRouter.delete("/:employeeId", (req, res) => {
   db.serialize(() => {
     db.run(
-      `UPDATE Employee SET is_current_employee = 0 WHERE Employee.id = ${req.params.employeeId};`,
+      `UPDATE Employee SET is_current_employee = 0 WHERE Employee.id = ${req.employeeId};`,
       (err) => {
         if (err) {
           throw err;
@@ -110,7 +112,7 @@ employeeRouter.delete("/:employeeId", (req, res) => {
     );
 
     db.get(
-      `${baseSelect} WHERE Employee.id = ${req.params.employeeId};`,
+      `${baseSelect} WHERE Employee.id = ${req.employeeId};`,
       (err, employee) => {
         if (err) {
           throw err;
@@ -120,4 +122,7 @@ employeeRouter.delete("/:employeeId", (req, res) => {
     );
   });
 });
+
+employeeRouter.use("/:employeeId/timesheets", timesheetRouter);
+
 module.exports = employeeRouter;
