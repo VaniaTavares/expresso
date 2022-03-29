@@ -23,9 +23,16 @@ menuItemsRouter.get("/", (req, res) => {
 });
 
 menuItemsRouter.post("/", (req, res) => {
-  const { menuItem } = req.body;
-  menuItem.menu_id = req.params.menuId;
-  const validateMenuItem = validatePost("MenuItem", menuItem);
+  const { name, description, inventory, price } = req.body.menuItem;
+
+  const menu_id = req.menuId;
+  const validateMenuItem = validatePost("MenuItem", {
+    name,
+    description,
+    inventory,
+    price,
+    menu_id,
+  });
 
   if (validateMenuItem) {
     db.serialize(() => {
@@ -74,15 +81,22 @@ menuItemsRouter.param("menuItemId", (req, res, next, id) => {
 });
 
 menuItemsRouter.put("/:menuItemId", (req, res) => {
-  const { menuItem } = req.body;
-  menuItem.menu_id = req.menuId;
-  const validateItemMenu = validatePost("MenuItem", menuItem);
+  const { name, description, inventory, price } = req.body.menuItem;
 
-  if (validateItemMenu) {
+  const menu_id = req.params.menuId;
+  const validateMenuItem = validatePost("MenuItem", {
+    name,
+    description,
+    inventory,
+    price,
+    menu_id,
+  });
+
+  if (validateMenuItem) {
     db.serialize(() => {
       db.run(
         "UPDATE MenuItem SET name = $name, description = $description, inventory = $inventory, price = $price, menu_id = $menu_id WHERE MenuItem.id = $menuItemId",
-        { ...validateItemMenu, $menuItemId: req.menuItemId },
+        { ...validateMenuItem, $menuItemId: req.menuItemId },
         (err) => {
           if (err) {
             throw err;

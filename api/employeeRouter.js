@@ -33,6 +33,7 @@ employeeRouter.post("/", (req, res) => {
       employeeFilter,
       (err) => {
         if (err) {
+          console.log(err);
           throw err;
         }
       }

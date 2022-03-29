@@ -24,7 +24,13 @@ timesheetRouter.get("/", (req, res) => {
 
 timesheetRouter.post("/", (req, res) => {
   const { timesheet } = req.body;
-  timesheet.employee_id = req.employeeId;
+
+  if (timesheet.employeeId) {
+    timesheet.employee_id = timesheet.employeeId;
+    delete timesheet.employeeId;
+  } else {
+    timesheet.employee_id = req.employeeId;
+  }
   const validateTimesheet = validatePost("Timesheet", timesheet);
   if (validateTimesheet) {
     db.serialize(() => {
@@ -78,7 +84,13 @@ timesheetRouter.param("timesheetId", (req, res, next, id) => {
 
 timesheetRouter.put("/:timesheetId", (req, res) => {
   const { timesheet } = req.body;
-  timesheet.employee_id = req.employeeId;
+
+  if (timesheet.employeeId) {
+    timesheet.employee_id = timesheet.employeeId;
+    delete timesheet.employeeId;
+  } else {
+    timesheet.employee_id = req.employeeId;
+  }
   const validateTimesheet = validatePost("Timesheet", timesheet);
 
   if (validateTimesheet) {

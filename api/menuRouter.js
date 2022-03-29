@@ -21,6 +21,7 @@ menuRouter.get("/", (_req, res) => {
 
 menuRouter.post("/", (req, res) => {
   const { menu } = req.body;
+
   const validateMenu = validatePost("Menu", menu);
 
   if (validateMenu) {
@@ -76,14 +77,16 @@ menuRouter.get("/:menuId", (req, res) => {
 
 menuRouter.put("/:menuId", (req, res) => {
   const { menu } = req.body;
-
+  if (!menu.id) {
+    menu.id = req.menuId;
+  }
   const validateMenu = validatePost("Menu", menu);
 
   if (validateMenu) {
     db.serialize(() => {
       db.run(
-        "UPDATE Menu SET title = $title WHERE Menu.id = $menuId",
-        { ...validateMenu, $menuId: req.menuId },
+        "UPDATE Menu SET title = $title WHERE Menu.id = $id",
+        validateMenu,
         (err) => {
           if (err) {
             throw err;

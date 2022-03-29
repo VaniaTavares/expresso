@@ -6,13 +6,16 @@ const allColumns = {
 };
 
 const validatePost = (tableName, body) => {
-  if (tableName === "Employee" && !body.is_current_employee) {
+  if (tableName === "Employee" && !body.isCurrentEmployee) {
     body.is_current_employee = 1;
+  } else if (tableName === "Employee" && body.isCurrentEmployee) {
+    body.is_current_employee = body.isCurrentEmployee;
+    delete body.isCurrentEmployee;
   }
 
   const verify = allColumns[tableName].every((elt) => {
     if (elt === "description") return true;
-    else return body.hasOwnProperty(elt);
+    else return Boolean(body[`${elt}`]) && body.hasOwnProperty(elt);
   });
 
   if (verify) {

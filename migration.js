@@ -7,7 +7,7 @@ const db = new sqlite3.Database(
 const { allColumns } = require("./api/validation");
 
 const createTables = ({ tableName, tableColumns }) => {
-  let sql = `CREATE TABLE ${tableName} (id INTEGER PRIMARY KEY NOT NULL, `;
+  let sql = `CREATE TABLE ${tableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, `;
 
   const int = "INTEGER NOT NULL";
   const text = "TEXT NOT NULL";
