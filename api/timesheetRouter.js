@@ -7,15 +7,19 @@ const db = new sqlite3.Database(
 
 const { validatePost, allColumns } = require("./validation");
 
-let baseSelect = "SELECT * FROM Timesheet WHERE employee_id=$employee_id";
+let baseSelect = "SELECT * FROM Timesheet";
 
 timesheetRouter.get("/", (req, res) => {
-  db.all(baseSelect, { $employee_id: req.employeeId }, (err, timesheets) => {
-    if (err) {
-      throw err;
+  db.all(
+    `${baseSelect} WHERE Timesheet.employee_id = $employee_id`,
+    { $employee_id: req.employeeId },
+    (err, timesheets) => {
+      if (err) {
+        throw err;
+      }
+      res.status(200).send({ timesheets });
     }
-    res.status(200).send({ timesheets });
-  });
+  );
 });
 
 timesheetRouter.post("/", (req, res) => {
@@ -38,12 +42,11 @@ timesheetRouter.post("/", (req, res) => {
 
       db.get(
         `${baseSelect} ORDER BY Timesheet.id DESC LIMIT 1;`,
-        { $employee_id: req.employeeId },
-        (err, timesheet) => {
+        (err, timesheetRetrieved) => {
           if (err) {
             throw err;
           }
-          res.status(201).send({ timesheet });
+          res.status(201).send({ timesheet: timesheetRetrieved });
         }
       );
     });
@@ -55,9 +58,8 @@ timesheetRouter.post("/", (req, res) => {
 timesheetRouter.param("timesheetId", (req, res, next, id) => {
   const timesheetId = Number(id);
   db.get(
-    `${baseSelect} and Timesheet.id = $timesheetId`,
+    `${baseSelect} WHERE Timesheet.id = $timesheetId`,
     {
-      $employee_id: req.employeeId,
       $timesheetId: timesheetId,
     },
     (err, timesheet) => {
@@ -65,7 +67,8 @@ timesheetRouter.param("timesheetId", (req, res, next, id) => {
         throw err;
       } else if (timesheet) {
         req.timesheetId = timesheetId;
-        return next();
+        next();
+        return;
       } else {
         res.sendStatus(404);
       }
@@ -81,9 +84,7 @@ timesheetRouter.put("/:timesheetId", (req, res) => {
   if (validateTimesheet) {
     db.serialize(() => {
       db.run(
-        `UPDATE Timesheet SET hours = $hours, rate = $rate, date = $date, employee_id = $employee_id WHERE Timesheet.id = ${Number(
-          req.params.timesheetId
-        )}`,
+        `UPDATE Timesheet SET hours = $hours, rate = $rate, date = $date, employee_id = $employee_id WHERE Timesheet.id = ${req.timesheetId}`,
         validateTimesheet,
         (err) => {
           if (err) {
@@ -95,7 +96,7 @@ timesheetRouter.put("/:timesheetId", (req, res) => {
       db.get(
         `SELECT * FROM Timesheet WHERE Timesheet.id = $timesheetId`,
         {
-          $timesheetId: req.params.timesheetId,
+          $timesheetId: req.timesheetId,
         },
         (err, timesheetRow) => {
           if (err) {
@@ -113,7 +114,8 @@ timesheetRouter.put("/:timesheetId", (req, res) => {
 
 timesheetRouter.delete("/:timesheetId", (req, res) => {
   db.run(
-    `DELETE FROM Timesheet WHERE Timesheet.id = ${req.params.timesheetId}`,
+    "DELETE FROM Timesheet WHERE Timesheet.id = $timesheetId",
+    { $timesheetId: req.timesheetId },
     (err) => {
       if (err) {
         throw err;

@@ -38,12 +38,15 @@ employeeRouter.post("/", (req, res) => {
       }
     );
 
-    db.get(`${baseSelect} ORDER BY Employee.id DESC LIMIT 1;`, (err, row) => {
-      if (err) {
-        throw err;
+    db.get(
+      `${baseSelect} ORDER BY Employee.id DESC LIMIT 1;`,
+      (err, employee) => {
+        if (err) {
+          throw err;
+        }
+        res.status(201).send({ employee });
       }
-      res.status(201).send({ employee: row });
-    });
+    );
   });
 });
 
